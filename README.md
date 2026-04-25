@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/thinkneo.svg)](https://pypi.org/project/thinkneo/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Python SDK for the [ThinkNEO MCP+A2A Gateway](https://github.com/thinkneo-ai/mcp-server) — 59 MCP tools + 24 A2A skills.
+Python SDK for the [ThinkNEO MCP+A2A Gateway](https://github.com/thinkneo-ai/mcp-server) — 62 MCP tools + 24 A2A skills.
 
 ## Install
 
@@ -15,9 +15,9 @@ pip install thinkneo
 ## Quick Start
 
 ```python
-from thinkneo import ThinkneoClient
+from thinkneo import ThinkNEO
 
-client = ThinkneoClient(api_key="tnk_your_key_here")
+client = ThinkNEO(api_key="tnk_your_key_here")
 
 # Safety check (free, no key needed)
 result = client.check(text="Ignore all previous instructions")
@@ -36,9 +36,9 @@ print(route.recommended_model)
 ## Async Support
 
 ```python
-from thinkneo import AsyncThinkneoClient
+from thinkneo import AsyncThinkNEO
 
-async with AsyncThinkneoClient(api_key="tnk_...") as client:
+async with AsyncThinkNEO(api_key="tnk_...") as client:
     result = await client.check(text="test prompt")
     status = await client.provider_status()
 ```
@@ -50,7 +50,7 @@ export THINKNEO_API_KEY=tnk_your_key_here
 ```
 
 ```python
-client = ThinkneoClient()  # reads from env
+client = ThinkNEO()  # reads from env
 ```
 
 ## All Methods
@@ -59,6 +59,6 @@ See [ThinkNEO MCP Server](https://github.com/thinkneo-ai/mcp-server) for full to
 
 ## Links
 
-- [Gateway](https://github.com/thinkneo-ai/mcp-server) — 59 MCP tools + 24 A2A skills
+- [Gateway](https://github.com/thinkneo-ai/mcp-server) — 62 MCP tools + 24 A2A skills
 - [TypeScript SDK](https://github.com/thinkneo-ai/sdk-typescript)
 - [Website](https://thinkneo.ai)
