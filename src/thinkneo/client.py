@@ -96,6 +96,29 @@ _RESPONSE_MODELS: dict[str, type] = {
 }
 
 
+def _parse_response(resp) -> dict:
+    """Parse an HTTP response that may be JSON or SSE (text/event-stream).
+
+    MCP Streamable HTTP transport returns SSE when the client accepts it.
+    SSE format: ``event: message\\ndata: {json}\\n\\n``
+    """
+    content_type = resp.headers.get("content-type", "")
+    body = resp.text
+
+    if "text/event-stream" in content_type or body.lstrip().startswith("event:"):
+        # Extract the last `data:` line from the SSE stream
+        last_data = None
+        for line in body.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("data:"):
+                last_data = stripped[5:].strip()
+        if last_data:
+            return json.loads(last_data)
+        raise ThinkNEOError("Empty SSE response from server")
+
+    return resp.json()
+
+
 def _build_jsonrpc(method: str, params: dict) -> dict:
     return {
         "jsonrpc": "2.0",
@@ -181,7 +204,10 @@ class ThinkNEO:
         self._client = httpx.Client(timeout=timeout)
 
     def _headers(self) -> dict[str, str]:
-        h = {"Content-Type": "application/json"}
+        h = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        }
         if self.api_key:
             h["Authorization"] = f"Bearer {self.api_key}"
         return h
@@ -209,7 +235,7 @@ class ThinkNEO:
                     raise ThinkNEOError(f"Server error {resp.status_code}", status_code=resp.status_code)
 
                 resp.raise_for_status()
-                data = resp.json()
+                data = _parse_response(resp)
 
                 if "error" in data:
                     err = data["error"]
@@ -785,7 +811,10 @@ class AsyncThinkNEO:
         self._client = httpx.AsyncClient(timeout=timeout)
 
     def _headers(self) -> dict[str, str]:
-        h = {"Content-Type": "application/json"}
+        h = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        }
         if self.api_key:
             h["Authorization"] = f"Bearer {self.api_key}"
         return h
@@ -815,7 +844,7 @@ class AsyncThinkNEO:
                     raise ThinkNEOError(f"Server error {resp.status_code}", status_code=resp.status_code)
 
                 resp.raise_for_status()
-                data = resp.json()
+                data = _parse_response(resp)
 
                 if "error" in data:
                     err = data["error"]

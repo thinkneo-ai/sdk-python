@@ -33,6 +33,8 @@ def _mock_response(status=200, body=None):
     resp = MagicMock(spec=httpx.Response)
     resp.status_code = status
     resp.json.return_value = body
+    resp.text = json.dumps(body)
+    resp.headers = {"content-type": "application/json"}
     resp.raise_for_status = MagicMock()
     if status >= 400:
         resp.raise_for_status.side_effect = httpx.HTTPStatusError(
@@ -98,6 +100,15 @@ class TestAuth:
         call_kwargs = mock_post.call_args
         headers = call_kwargs.kwargs.get("headers", call_kwargs[1].get("headers", {}))
         assert "Bearer test-key" in str(headers)
+
+    def test_accept_header_set(self, client, mock_post):
+        """SEC-21: Accept header must include both application/json and text/event-stream."""
+        client.check(text="test")
+        call_kwargs = mock_post.call_args
+        headers = call_kwargs.kwargs.get("headers", call_kwargs[1].get("headers", {}))
+        assert "Accept" in headers, "Accept header missing — MCP requires it"
+        assert "application/json" in headers["Accept"]
+        assert "text/event-stream" in headers["Accept"]
 
     def test_no_auth_header_without_key(self, mock_post):
         c = ThinkneoClient(api_key=None, base_url="https://test.example.com/mcp")
